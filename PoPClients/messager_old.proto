@@ -1,0 +1,76 @@
+syntax="proto3";
+
+option go_package = "./proto;messager";
+
+package main;
+
+enum MessageType {
+    ClientProposalType = 0;
+    ClientConfirmationType = 1;
+    LeaderIssueLogType = 2;
+    ServerReplyLogType = 3;
+    LeaderIssueOrderType = 4;
+    ServerReplyOrderType = 5;
+    LeaderIssueCommitType = 6;
+    ServerReplyCommitType = 7;
+    CandidateCallForElectionType = 8;
+    ServerReplyForElectionType = 9;
+}
+
+//ClientID-timestamp-transactions-MACs
+message MessageBank {
+    MessageType msgType = 10;
+    optional ClientProposal clientProposal = 11;
+    optional ClientConfirmation clientConfirmation = 12;
+    optional LeaderIssueLog leaderIssueLog = 13;
+    optional ServerReplyLog serverReplyLog = 14;
+    optional LeaderIssueOrder leaderIssueOrder = 15;
+    optional ServerReplyOrder serverReplyOrder = 16;
+}
+
+message ClientProposal{
+    int64 clientID = 1;
+    int64 timestamp = 2;
+    string localTime = 3;
+    string tx = 4;
+    bytes macs = 5;
+}
+
+message ClientConfirmation{
+    int64 timestamp = 1;
+    int64 commitIndex = 2;
+}
+
+message LeaderIssueLog{
+    int64 msgIndex = 1;
+    int64 clientID = 2;
+    int64 timestamp = 3;
+    string tx = 4;
+    bytes txHash = 5;
+    bytes sig = 6;
+}
+
+message ServerReplyLog{
+    int64 msgIndex = 1;
+    bytes infoHash = 2;
+    bytes sig = 3;
+    int64 clientID = 4;
+    int64 timestamp = 5;
+}
+
+message LeaderIssueOrder{
+    int64 msgIndex = 1;
+    bytes txHash = 2;
+    bytes infoHash = 3;
+    bytes thresholdSig = 4;
+    int64 clientID = 5;
+    int64 timestamp = 6;
+}
+
+message ServerReplyOrder{
+    int64 msgIndex = 1;
+    bytes confirmOrderHash = 2;
+    bytes sig = 3;
+    int64 clientID = 4;
+    int64 timestamp = 5;
+}

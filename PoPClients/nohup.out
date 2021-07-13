@@ -1,0 +1,217 @@
+127.0.0.1:10001 client_sender_1
+127.0.0.1:10002 client_sender_2
+127.0.0.1:10003 client_sender_3
+127.0.0.1:10004 client_sender_4
+127.0.0.1:10005 client_sender_5
+127.0.0.1:10006 client_sender_6
+127.0.0.1:10007 client_sender_7
+127.0.0.1:10008 client_sender_8
+127.0.0.1:10009 client_sender_9
+127.0.0.1:10010 client_sender_10
+[127.0.0.1:9000]
+time="2021-04-16T22:51:38+08:00" level=info msg="Quorum: 1\n" func="main.main()" file="client.go:49"
+time="2021-04-16T22:51:38+08:00" level=info msg="message going to be sent: clientProposal:{timestamp:1 localTime:\"2021-04-16 22:51:38.534789 +0800 CST m=+0.006854390\" tx:\"lzjuwoJybD\" macs:\"\\xad\\xaa\\xac\\x95\\xf6j\\x06.\\x14\\x00\\x07\\xbd\\x07\\xa7xm|\\x85\\xf2m\\x10?\\x98R\\xaa)\\x95ڣޠ\\xa7\"}\n" func="main.loadMessageQueue()" file="utilities.go:86"
+time="2021-04-16T22:51:38+08:00" level=info msg="Message Q loading completed | numOfMsgToBeSent: 100000\n" func="main.loadMessageQueue()" file="utilities.go:90"
+time="2021-04-16T22:51:39+08:00" level=info msg="Latency: 6 ms | committed: 143" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:40+08:00" level=info msg="Latency: 6 ms | committed: 297" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:41+08:00" level=info msg="Latency: 6 ms | committed: 448" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:42+08:00" level=info msg="Latency: 6 ms | committed: 601" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:43+08:00" level=info msg="Latency: 6 ms | committed: 753" func="main.showLatency()" file="utilities.go:248"
+127.0.0.1:10001 client_sender_1
+127.0.0.1:10002 client_sender_2
+127.0.0.1:10003 client_sender_3
+127.0.0.1:10004 client_sender_4
+127.0.0.1:10005 client_sender_5
+127.0.0.1:10006 client_sender_6
+127.0.0.1:10007 client_sender_7
+127.0.0.1:10008 client_sender_8
+127.0.0.1:10009 client_sender_9
+127.0.0.1:10010 client_sender_10
+[127.0.0.1:9000]
+time="2021-04-16T22:51:44+08:00" level=info msg="Quorum: 1\n" func="main.main()" file="client.go:49"
+time="2021-04-16T22:51:44+08:00" level=info msg="message going to be sent: clientProposal:{timestamp:1 localTime:\"2021-04-16 22:51:44.137274 +0800 CST m=+0.007037096\" tx:\"8Q2By08Vbi\" macs:\"\\x18\\xf5\\xfe}\\xe8\\x111^\\x98\\xca\\xec)q!\\xba\\x10\\xa6\\x87cL\\x90Bh\\xe0\\x88\\n\\xa2x/\\xf4\\xdaX\"}\n" func="main.loadMessageQueue()" file="utilities.go:86"
+time="2021-04-16T22:51:44+08:00" level=info msg="Message Q loading completed | numOfMsgToBeSent: 100000\n" func="main.loadMessageQueue()" file="utilities.go:90"
+overthrow
+overthrow
+time="2021-04-16T22:51:44+08:00" level=info msg="Latency: 6 ms | committed: 904" func="main.showLatency()" file="utilities.go:248"
+panic: runtime error: integer divide by zero
+
+goroutine 11 [running]:
+main.showLatency(0x1)
+	/Users/edward/go/src/prosecutor_client/utilities.go:247 +0x176
+created by main.main
+	/Users/edward/go/src/prosecutor_client/client.go:59 +0x162
+time="2021-04-16T22:51:45+08:00" level=info msg="Latency: 6 ms | committed: 1057" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:46+08:00" level=info msg="Latency: 6 ms | committed: 1212" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:47+08:00" level=info msg="Latency: 6 ms | committed: 1364" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:48+08:00" level=info msg="Latency: 6 ms | committed: 1516" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:49+08:00" level=info msg="Latency: 6 ms | committed: 1668" func="main.showLatency()" file="utilities.go:248"
+127.0.0.1:10001 client_sender_1
+127.0.0.1:10002 client_sender_2
+127.0.0.1:10003 client_sender_3
+127.0.0.1:10004 client_sender_4
+127.0.0.1:10005 client_sender_5
+127.0.0.1:10006 client_sender_6
+127.0.0.1:10007 client_sender_7
+127.0.0.1:10008 client_sender_8
+127.0.0.1:10009 client_sender_9
+127.0.0.1:10010 client_sender_10
+[127.0.0.1:9000]
+time="2021-04-16T22:51:50+08:00" level=info msg="Quorum: 1\n" func="main.main()" file="client.go:49"
+time="2021-04-16T22:51:50+08:00" level=info msg="message going to be sent: clientProposal:{timestamp:1 localTime:\"2021-04-16 22:51:50.485947 +0800 CST m=+0.016747315\" tx:\"TRBMmiKojl\" macs:\":\\xf7\\xa9\\x00\\x1f\\xdbݺg\\x0b\\x88\\x86\\x87-\\xe2,;|\\x9f\\x08\\x02\\xa3e\\xe4K\\xaa\\xe3\\x81(34\\xb5\"}\n" func="main.loadMessageQueue()" file="utilities.go:86"
+time="2021-04-16T22:51:50+08:00" level=info msg="Message Q loading completed | numOfMsgToBeSent: 100000\n" func="main.loadMessageQueue()" file="utilities.go:90"
+overthrow
+overthrow
+time="2021-04-16T22:51:50+08:00" level=info msg="Latency: 6 ms | committed: 1821" func="main.showLatency()" file="utilities.go:248"
+panic: runtime error: integer divide by zero
+
+goroutine 13 [running]:
+main.showLatency(0x1)
+	/Users/edward/go/src/prosecutor_client/utilities.go:247 +0x176
+created by main.main
+	/Users/edward/go/src/prosecutor_client/client.go:59 +0x162
+time="2021-04-16T22:51:51+08:00" level=info msg="Latency: 6 ms | committed: 1972" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:52+08:00" level=info msg="Latency: 6 ms | committed: 2124" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:53+08:00" level=info msg="Latency: 6 ms | committed: 2276" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:54+08:00" level=info msg="Latency: 6 ms | committed: 2429" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:55+08:00" level=info msg="Latency: 6 ms | committed: 2580" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:56+08:00" level=info msg="Latency: 6 ms | committed: 2731" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:57+08:00" level=info msg="Latency: 6 ms | committed: 2883" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:58+08:00" level=info msg="Latency: 6 ms | committed: 3033" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:51:59+08:00" level=info msg="Latency: 6 ms | committed: 3185" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:00+08:00" level=info msg="Latency: 6 ms | committed: 3338" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:01+08:00" level=info msg="Latency: 6 ms | committed: 3490" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:02+08:00" level=info msg="Latency: 6 ms | committed: 3641" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:03+08:00" level=info msg="Latency: 6 ms | committed: 3790" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:04+08:00" level=info msg="Latency: 6 ms | committed: 3941" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:05+08:00" level=info msg="Latency: 6 ms | committed: 4093" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:06+08:00" level=info msg="Latency: 6 ms | committed: 4246" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:07+08:00" level=info msg="Latency: 6 ms | committed: 4397" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:08+08:00" level=info msg="Latency: 6 ms | committed: 4545" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:09+08:00" level=info msg="Latency: 6 ms | committed: 4696" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:10+08:00" level=info msg="Latency: 6 ms | committed: 4845" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:11+08:00" level=info msg="Latency: 6 ms | committed: 4994" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:12+08:00" level=info msg="Latency: 6 ms | committed: 5146" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:13+08:00" level=info msg="Latency: 6 ms | committed: 5297" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:14+08:00" level=info msg="Latency: 6 ms | committed: 5448" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:15+08:00" level=info msg="Latency: 6 ms | committed: 5599" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:16+08:00" level=info msg="Latency: 6 ms | committed: 5750" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:17+08:00" level=info msg="Latency: 6 ms | committed: 5901" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:18+08:00" level=info msg="Latency: 6 ms | committed: 6052" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:19+08:00" level=info msg="Latency: 6 ms | committed: 6202" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:20+08:00" level=info msg="Latency: 6 ms | committed: 6355" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:21+08:00" level=info msg="Latency: 6 ms | committed: 6506" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:22+08:00" level=info msg="Latency: 6 ms | committed: 6654" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:23+08:00" level=info msg="Latency: 6 ms | committed: 6805" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:24+08:00" level=info msg="Latency: 6 ms | committed: 6955" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:25+08:00" level=info msg="Latency: 6 ms | committed: 7107" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:26+08:00" level=info msg="Latency: 6 ms | committed: 7260" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:27+08:00" level=info msg="Latency: 6 ms | committed: 7413" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:28+08:00" level=info msg="Latency: 6 ms | committed: 7566" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:29+08:00" level=info msg="Latency: 6 ms | committed: 7718" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:31+08:00" level=info msg="Latency: 6 ms | committed: 7868" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:32+08:00" level=info msg="Latency: 6 ms | committed: 8019" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:33+08:00" level=info msg="Latency: 6 ms | committed: 8170" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:34+08:00" level=info msg="Latency: 6 ms | committed: 8320" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:35+08:00" level=info msg="Latency: 6 ms | committed: 8469" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:36+08:00" level=info msg="Latency: 6 ms | committed: 8615" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:37+08:00" level=info msg="Latency: 6 ms | committed: 8764" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:38+08:00" level=info msg="Latency: 6 ms | committed: 8914" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:39+08:00" level=info msg="Latency: 6 ms | committed: 9059" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:40+08:00" level=info msg="Latency: 6 ms | committed: 9208" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:41+08:00" level=info msg="Latency: 6 ms | committed: 9360" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:42+08:00" level=info msg="Latency: 6 ms | committed: 9510" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:43+08:00" level=info msg="Latency: 7 ms | committed: 9654" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:44+08:00" level=info msg="Latency: 7 ms | committed: 9796" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:45+08:00" level=info msg="Latency: 7 ms | committed: 9939" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:46+08:00" level=info msg="Latency: 7 ms | committed: 10081" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:47+08:00" level=info msg="Latency: 7 ms | committed: 10223" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:48+08:00" level=info msg="Latency: 7 ms | committed: 10355" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:49+08:00" level=info msg="Latency: 7 ms | committed: 10495" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:50+08:00" level=info msg="Latency: 6 ms | committed: 10641" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:51+08:00" level=info msg="Latency: 7 ms | committed: 10781" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:52+08:00" level=info msg="Latency: 6 ms | committed: 10925" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:53+08:00" level=info msg="Latency: 7 ms | committed: 11065" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:54+08:00" level=info msg="Latency: 6 ms | committed: 11211" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:55+08:00" level=info msg="Latency: 7 ms | committed: 11352" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:56+08:00" level=info msg="Latency: 7 ms | committed: 11493" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:57+08:00" level=info msg="Latency: 7 ms | committed: 11631" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:58+08:00" level=info msg="Latency: 7 ms | committed: 11769" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:52:59+08:00" level=info msg="Latency: 7 ms | committed: 11902" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:00+08:00" level=info msg="Latency: 7 ms | committed: 12035" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:01+08:00" level=info msg="Latency: 7 ms | committed: 12163" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:02+08:00" level=info msg="Latency: 7 ms | committed: 12292" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:03+08:00" level=info msg="Latency: 7 ms | committed: 12422" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:04+08:00" level=info msg="Latency: 7 ms | committed: 12552" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:05+08:00" level=info msg="Latency: 7 ms | committed: 12677" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:06+08:00" level=info msg="Latency: 8 ms | committed: 12802" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:07+08:00" level=info msg="Latency: 8 ms | committed: 12927" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:08+08:00" level=info msg="Latency: 8 ms | committed: 13048" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:09+08:00" level=info msg="Latency: 8 ms | committed: 13170" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:10+08:00" level=info msg="Latency: 8 ms | committed: 13291" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:11+08:00" level=info msg="Latency: 8 ms | committed: 13412" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:12+08:00" level=info msg="Latency: 8 ms | committed: 13534" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:13+08:00" level=info msg="Latency: 8 ms | committed: 13655" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:14+08:00" level=info msg="Latency: 8 ms | committed: 13776" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:15+08:00" level=info msg="Latency: 8 ms | committed: 13897" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:16+08:00" level=info msg="Latency: 8 ms | committed: 14017" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:17+08:00" level=info msg="Latency: 8 ms | committed: 14135" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:18+08:00" level=info msg="Latency: 8 ms | committed: 14247" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:19+08:00" level=info msg="Latency: 9 ms | committed: 14354" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:20+08:00" level=info msg="Latency: 9 ms | committed: 14460" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:21+08:00" level=info msg="Latency: 9 ms | committed: 14569" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:22+08:00" level=info msg="Latency: 9 ms | committed: 14678" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:23+08:00" level=info msg="Latency: 9 ms | committed: 14787" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:24+08:00" level=info msg="Latency: 9 ms | committed: 14897" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:25+08:00" level=info msg="Latency: 9 ms | committed: 15006" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:26+08:00" level=info msg="Latency: 9 ms | committed: 15116" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:27+08:00" level=info msg="Latency: 9 ms | committed: 15225" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:28+08:00" level=info msg="Latency: 9 ms | committed: 15334" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:29+08:00" level=info msg="Latency: 9 ms | committed: 15443" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:30+08:00" level=info msg="Latency: 9 ms | committed: 15554" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:31+08:00" level=info msg="Latency: 8 ms | committed: 15666" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:32+08:00" level=info msg="Latency: 8 ms | committed: 15779" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:33+08:00" level=info msg="Latency: 8 ms | committed: 15893" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:34+08:00" level=info msg="Latency: 8 ms | committed: 16006" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:35+08:00" level=info msg="Latency: 8 ms | committed: 16120" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:36+08:00" level=info msg="Latency: 8 ms | committed: 16237" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:37+08:00" level=info msg="Latency: 8 ms | committed: 16355" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:38+08:00" level=info msg="Latency: 8 ms | committed: 16474" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:39+08:00" level=info msg="Latency: 8 ms | committed: 16595" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:40+08:00" level=info msg="Latency: 8 ms | committed: 16716" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:41+08:00" level=info msg="Latency: 8 ms | committed: 16838" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:42+08:00" level=info msg="Latency: 8 ms | committed: 16961" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:43+08:00" level=info msg="Latency: 8 ms | committed: 17086" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:44+08:00" level=info msg="Latency: 7 ms | committed: 17212" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:45+08:00" level=info msg="Latency: 8 ms | committed: 17337" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:46+08:00" level=info msg="Latency: 8 ms | committed: 17462" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:47+08:00" level=info msg="Latency: 7 ms | committed: 17588" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:48+08:00" level=info msg="Latency: 8 ms | committed: 17713" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:49+08:00" level=info msg="Latency: 8 ms | committed: 17837" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:50+08:00" level=info msg="Latency: 8 ms | committed: 17962" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:51+08:00" level=info msg="Latency: 7 ms | committed: 18088" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:52+08:00" level=info msg="Latency: 8 ms | committed: 18213" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:53+08:00" level=info msg="Latency: 7 ms | committed: 18340" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:54+08:00" level=info msg="Latency: 7 ms | committed: 18469" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:55+08:00" level=info msg="Latency: 7 ms | committed: 18598" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:56+08:00" level=info msg="Latency: 7 ms | committed: 18727" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:57+08:00" level=info msg="Latency: 7 ms | committed: 18857" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:58+08:00" level=info msg="Latency: 7 ms | committed: 18986" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:53:59+08:00" level=info msg="Latency: 7 ms | committed: 19115" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:00+08:00" level=info msg="Latency: 7 ms | committed: 19245" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:01+08:00" level=info msg="Latency: 7 ms | committed: 19376" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:02+08:00" level=info msg="Latency: 7 ms | committed: 19510" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:03+08:00" level=info msg="Latency: 7 ms | committed: 19643" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:04+08:00" level=info msg="Latency: 7 ms | committed: 19776" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:05+08:00" level=info msg="Latency: 7 ms | committed: 19909" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:06+08:00" level=info msg="Latency: 7 ms | committed: 20042" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:07+08:00" level=info msg="Latency: 7 ms | committed: 20174" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:08+08:00" level=info msg="Latency: 7 ms | committed: 20303" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:09+08:00" level=info msg="Latency: 7 ms | committed: 20434" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:10+08:00" level=info msg="Latency: 7 ms | committed: 20567" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:11+08:00" level=info msg="Latency: 7 ms | committed: 20699" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:12+08:00" level=info msg="Latency: 8 ms | committed: 20824" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:13+08:00" level=info msg="Latency: 7 ms | committed: 20957" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:14+08:00" level=info msg="Latency: 7 ms | committed: 21090" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:15+08:00" level=info msg="Latency: 7 ms | committed: 21224" func="main.showLatency()" file="utilities.go:248"
+time="2021-04-16T22:54:16+08:00" level=info msg="Latency: 7 ms | committed: 21357" func="main.showLatency()" file="utilities.go:248"

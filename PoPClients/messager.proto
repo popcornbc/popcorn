@@ -1,0 +1,67 @@
+syntax="proto3";
+
+option go_package = "./proto;messager";
+
+package main;
+
+
+enum CommunicationType {
+    Type_Client_To_Cluster      = 0;
+    Type_Cluster_To_Client      = 1;
+    Type_Internal_Issue_Cmd     = 2;
+    Type_Internal_Response_Cmd  = 3;
+}
+
+enum MessageType {
+    ClientProposalType              = 0;
+    ClientConfirmationType          = 1;
+    LeaderIssueLogType              = 2;
+    ServerReplyLogType              = 3;
+    LeaderIssueOrderType            = 4;
+    ServerReplyOrderType            = 5;
+    LeaderIssueCommitType           = 6;
+    ServerReplyCommitType           = 7;
+    CandidateCallForElectionType    = 8;
+    ServerReplyForElectionType      = 9;
+}
+
+message MessageBank {
+    CommunicationType cmuType = 10;
+    optional ClientProposal clientProposal = 11;
+    optional ClientConfirmation clientConfirmation = 12;
+    optional LeaderIssueCmd leaderIssueCmd = 13;
+    optional ServerReplyCmd serverReplyCmd = 14;
+}
+
+message ClientProposal{
+    int64 ClientID  = 1;
+    int64 timestamp = 2;
+    string tx       = 3;
+    bytes macs      = 4;
+}
+
+message ClientConfirmation{
+    int64 timestamp     = 1;
+    int64 commitIndex   = 2;
+    bytes txHash        = 3;
+}
+
+message LeaderIssueCmd {
+    int64 msgType   = 1;
+    int64 msgIndex  = 2;
+    int64 clientID  = 3;
+    int64 timestamp = 4;
+    string tx       = 5;
+    bytes txHash    = 6;
+    bytes sig       = 7;
+    bytes threshSig = 8;
+}
+
+message ServerReplyCmd{
+    int64 msgType   = 1;
+    float msgIndex  = 2;
+    bytes infoHash  = 3;
+    bytes sig       = 4;
+    float clientID  = 5;
+    float timestamp = 6;
+}
