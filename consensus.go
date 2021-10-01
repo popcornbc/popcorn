@@ -1,37 +1,32 @@
 package main
 
 import (
+	"bytes"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
-	poffice "popcorn/postOffice"
-	messager "popcorn/proto"
-	"strconv"
+	proto "popcorn/proto"
+	"popcorn/rsm"
 	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
-func clientCommunication(){
-	for conn := range postman.CliConns{
-		handleCliConn(conn)
-	}
-}
-
 func handleCliConn(conn *net.Conn){
-	log.Warningf("NEW CLIENT REGISTERED | ClientAddr: %s",
-		(*conn).RemoteAddr())
+
+	log.Warningf("NEW CLIENT REGISTERED | ClientAddr: %s", (*conn).RemoteAddr())
 
 	maidenComm := true
 	dec := gob.NewDecoder(*conn)
 	var clientDock *clientConnDock
 
-	receivedMessageIndicator := 0
+	//var tools BatchingTools
+
 	for {
 
-		var m messager.MessageBank
+		var m proto.ClientProposeEntry
 
 		err := dec.Decode(&m)
 		if err != nil{
@@ -43,137 +38,452 @@ func handleCliConn(conn *net.Conn){
 			continue
 		}
 
-		if m.GetCmuType() != messager.CommunicationType_Type_Client_To_Cluster{
-			log.Warnf("Wrong mType %v", m.GetCmuType())
-			continue
-		}
-
 		if maidenComm {
 			ca := &clientConnDock{
-				clientConn: conn,
-				m:          make(map[int64]*TXLog),
-				enc:        gob.NewEncoder(*conn),
-				dec:        gob.NewDecoder(*conn),
+				c	: conn,
+				m	: make(map[int64]*TXLog),
+				enc : gob.NewEncoder(*conn),
+				dec : gob.NewDecoder(*conn),
 			}
 
 			clientDock = ca
 			muClientConnNavigator.Lock()
-			clientConnNavigator[m.GetClientProposal().GetClientID()]= ca
+			clientConnNavigator[m.GetClientID()]= ca
 			muClientConnNavigator.Unlock()
 
 			maidenComm = false
 		}
 
-		receivedMessageIndicator++
-		if receivedMessageIndicator == BatchSize{
-
+		if state.GetCurrentState() != rsm.LEADER{
+			//
+			//
+			//
+			// If system state is not leader, no nothing;
+			// Future work: pipeline-based approach:
+			// Pipes transactions with changeable index.
+			return
 		}
 
-		go asynDisseminateLog(m.GetClientProposal(), clientDock)
-		//asynDisseminateLog(m.GetClientProposal(), clientDock)
+		if BatchSize == 1 {
+			go asynDisseminateLog(&m, clientDock)
+		} else {
+			go asynPackLogToBatch(&m, clientDock)
+		}
 	}
 }
 
-func asynDisseminateLog(proposal *messager.ClientProposal, ca *clientConnDock){
+func asynPackLogToBatch(m *proto.ClientProposeEntry, clientDock *clientConnDock) {
+	log.Infof("NEW PROPOSAL | TS: %v | Tx: %v", m.GetTimestamp(), m.GetTransaction())
 
-	ok := ValidateMACs(proposal.GetClientID(), proposal.GetTx(), proposal.GetMacs())
+	ok := ValidateMACs(m.GetClientID(), m.GetTransaction(), m.GetMacs())
 	if !ok {
 		log.Errorln("validation of txMACs failed")
 		return
 	}
 
-	txHash, sig, err := signMsgDigest(proposal.GetTx())
+	//
+	// Message index is replaced with the position in the messaging channel
+	// The circulated packet is represented by batches. Individual messages
+	// in a batch no longer carry message index; however, we kept increasing
+	// log index of the system.
+	//
+	// If the order of messages in a batch matters, one can easily add a feature
+	// in OneTx and pass the incremented log index to it.
+	state.IncrementLogIndex()
+
+	batching.txQ <- &OneTx{
+		tx:        m.Transaction,
+		timestamp: m.Timestamp,
+		hash:      getDigest([]byte(m.Transaction)),
+		conn:      clientDock.c,
+		macs:		m.Macs,
+	}
+
+	//log.Debugf("orderingInfoHash: %v | leaderSig: %v", hex.EncodeToString(orderingInfoHash), hex.EncodeToString(orderingInfoSig))
+	//log.Debugf("commitInfoHash: %v | leaderSig: %v", hex.EncodeToString(commitInfoHash), hex.EncodeToString(commitInfoSig))
+
+}
+
+func disseminateBatches(){
+	batchCounter := 0
+	var concatTxHash [][]byte
+	var batchedEntries []*proto.InBatchEntry
+
+	for oneTx := range batching.txQ {
+
+		concatTxHash = append(concatTxHash, oneTx.hash)
+
+		entry := &proto.InBatchEntry{
+			Transaction: oneTx.tx,
+			Timestamp:   oneTx.timestamp,
+			Macs:        oneTx.macs,
+		}
+
+		batchedEntries = append(batchedEntries, entry)
+
+		batchCounter++
+
+		if batchCounter % BatchSize != 0 {
+			continue
+		}
+
+		//
+		// Prepare batch
+		//
+		//
+
+		batchTxHash := bytes.Join(concatTxHash, nil)
+
+		orderingInfoHash, orderingInfoSig, err := prepareInfoSig(batching.n, batchTxHash, OrderPhase)
+		if err != nil{
+			log.Errorf("prepareInfoSig of ordering failed | err: %v", err)
+			return
+		}
+
+		commitInfoHash, commitInfoSig, err := prepareInfoSig(batching.n, batchTxHash, CommitPhase)
+		if err != nil{
+			log.Errorf("prepareInfoSig of commit failed | err: %v", err)
+			return
+		}
+
+		txLog := &TXLog{
+			Index				: batching.n,
+			//ClientConn		: oneTx.conn,
+			//TimeStamp			: []int64{m.GetTimestamp()},
+			TxHash				: batchTxHash,
+			OrderingInfoHash	: orderingInfoHash,
+			CommitInfoHash		: commitInfoHash,
+			Ordered				: 1,
+			Committed			: 0,
+			OrderedProofCert	: nil,
+			CommittedProofCert	: nil,
+			OrderingSigShares	: [][]byte{orderingInfoSig},
+			CommitSigShares		: [][]byte{commitInfoSig},
+			RSMUpdated			: false,
+		}
+
+		// The index of the message is the key of the storage (map)
+		batchingCache.Lock()
+		batchingCache.m[batching.n] = txLog
+		batchingCache.Unlock()
+
+		postBatchedEntries := &proto.LeaderPostBatchedPostEntries{
+			BatchIndex:       batching.n,
+			SignatureOnBatch: orderingInfoSig,
+			BatchedEntries:   batchedEntries,
+		}
+
+		go broadcast(postBatchedEntries, PostPhase)
+
+		log.Debugf("=> postEntry broadcast for batch %v", batching.n)
+
+		batching.n++
+	}
+}
+
+func prepareInfoSig(msgIndex int64, txHash []byte, phase uint) ([]byte, []byte, error){
+
+	cert := ThresholdCertificate{
+		MessageIndex:      msgIndex,
+		HashOfTransaction: txHash,
+		PhaseSymbol:       phase,
+	}
+
+	proof, err := serialization(cert)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	infoHash := getDigest(proof)
+	infoSig, err := PenSign(infoHash)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return infoHash, infoSig, nil
+}
+
+func asynDisseminateLog(m *proto.ClientProposeEntry, ca *clientConnDock){
+
+	ok := ValidateMACs(m.GetClientID(), m.GetTransaction(), m.GetMacs())
+	if !ok {
+		log.Errorln("validation of txMACs failed")
+		return
+	}
+
+	txHash, sig, err := signMsgDigest(m.GetTransaction())
 	if err != nil{
 		log.Errorf("sign failed | err: %v", err)
 		return
 	}
 
-	log.Infof("NEW PROPOSAL | TS: %v | Tx: %v", proposal.GetTimestamp(), proposal.GetTx())
+	log.Infof("NEW PROPOSAL | TS: %v | Tx: %v", m.GetTimestamp(), m.GetTransaction())
 
-	msgIndex := atomic.AddInt64(&LogIndex, 1)
+	msgIndex := state.IncrementLogIndex()
 
-	endorsedInfo := append([]byte(strconv.FormatInt(msgIndex, 10)), txHash...)
-	infoHash := getDigest(endorsedInfo)
-	infoSig, err := PenSign(infoHash[:])
-	if err != nil{
-		log.Errorln("Sign failed;", err)
+/*	cert := ThresholdCertificate{
+		MessageIndex:      msgIndex,
+		HashOfTransaction: txHash,
+		PhaseSymbol:       OrderPhase,
+	}
+
+	proof, err := serialization(cert)
+	if err != nil {
+		log.Errorf("serialize certification failed | err: ", err)
 		return
 	}
-	sigShares := [][]byte{infoSig}
+
+	//endorsedInfo := append([]byte(strconv.FormatInt(msgIndex, 10)), txHash...)
+	//infoHash := getDigest(endorsedInfo)
+
+	infoHash := getDigest(proof)*/
+	orderingInfoHash, orderingInfoSig, err := prepareInfoSig(msgIndex, txHash, OrderPhase)
+	if err != nil{
+		log.Errorf("prepareInfoSig of ordering failed | err: %v", err)
+		return
+	}
+
+	commitInfoHash, commitInfoSig, err := prepareInfoSig(msgIndex, txHash, CommitPhase)
+	if err != nil{
+		log.Errorf("prepareInfoSig of commit failed | err: %v", err)
+		return
+	}
+
+	//log.Debugf("orderingInfoHash: %v | leaderSig: %v", hex.EncodeToString(orderingInfoHash), hex.EncodeToString(orderingInfoSig))
+	//log.Debugf("commitInfoHash: %v | leaderSig: %v", hex.EncodeToString(commitInfoHash), hex.EncodeToString(commitInfoSig))
 
 	txLog := &TXLog{
-		Index:		  msgIndex,
-		TimeStamp:    proposal.GetTimestamp(),
-		TxHash:       txHash,
-		LogIndicator: 1, // leader logs it first
-		SigShares:	  sigShares,
-		Committed:	  false,
+		Index				: msgIndex,
+		ClientConn			: ca.c,
+		TimeStamp			: []int64{m.GetTimestamp()},
+		TxHash				: txHash,
+		OrderingInfoHash	: orderingInfoHash,
+		CommitInfoHash		: commitInfoHash,
+		Ordered				: 1,
+		Committed			: 0,
+		OrderedProofCert	: nil,
+		CommittedProofCert	: nil,
+		OrderingSigShares	: [][]byte{orderingInfoSig},
+		CommitSigShares		: [][]byte{commitInfoSig},
+		RSMUpdated			: false,
 	}
 
+	// The index of the message is the key of the storage (map)
 	ca.Lock()
-	ca.m[proposal.GetTimestamp()] = txLog
+	ca.m[msgIndex] = txLog
 	ca.Unlock()
 
-	logMsg := oneIssueLogInstance(msgIndex, proposal.GetClientID(), proposal.GetTimestamp(), proposal.GetTx(), txHash, sig)
+	postEntry := postPhaseEntry(msgIndex, m.GetClientID(), m.GetTimestamp(), m.GetTransaction(), m.GetMacs(), sig)
 
-	logCmd := prepareIssueLogMessage(logMsg)
+	broadcast(postEntry, PostPhase)
 
-	broadcast(logCmd)
-
+	log.Debugf("=> postEntry broadcast for msg %v", msgIndex)
 }
 
-func serverCommunication(){
+func registerServer(sConn *net.Conn, phase int, sid int) {
 
-	postPhaseListenerAddress := ServerList[0].Ip + ":" + ServerList[0].Ports[poffice.PortInternalListenerPostPhase]
-	postPhaseListener, err := net.Listen("tcp4", postPhaseListenerAddress)
+	serverConnNav.mu.Lock()
 
-	if err != nil {
-		log.Error(err)
-		return
-	}
+	defer serverConnNav.mu.Unlock()
 
-	i := 0
-	for {
-		if ThisServerID == i { i ++ } // skip recording this server Id into the array
-
-		if conn, err := postPhaseListener.Accept(); err == nil {
-			go handleServerConn(&conn, i)
-		} else {
-			log.Error(err)
-		}
-
-		i ++
+	serverConnNav.n[phase][sid] = &serverConnDock{
+		serverId:   sid,
+		conn: 		sConn,
+		enc:        gob.NewEncoder(*sConn),
+		dec:        gob.NewDecoder(*sConn),
 	}
 }
 
-func handleServerConn(sConn *net.Conn, sid int) {
+func handlePostPhaseServerConn(sConn *net.Conn, sid int){
+	var postPhaseErrorFlag = errors.New("post phase")
 
-	muServerConnNavigator.Lock()
-	encoder := gob.NewEncoder(*sConn)
-	decoder := gob.NewDecoder(*sConn)
+	registerServer(sConn, PostPhase, sid)
 
-	serConnDock := &serverConnDock{
-		serverConn:    sConn,
-		serverId:      sid,
-		enc:           encoder,
-		dec:           decoder,
-	}
+	log.Warningf("%v | new server registered | Id: %v -> Addr: %v\n", postPhaseErrorFlag, sid, (*sConn).RemoteAddr())
 
-	serverConnNavigator[sid] = serConnDock
+}
 
-	log.Warningf("New Server Registered: %v -> %v\n", sid, (*sConn).RemoteAddr())
-	muServerConnNavigator.Unlock()
+func handleOrderPhaseServerConn(sConn *net.Conn, sid int) {
+	// Handle PostReply from servers
+	var orderPhaseErrorFlag = errors.New("order phase")
+
+	registerServer(sConn, OrderPhase, sid)
+
+	log.Warningf("%v | new server registered | Id: %v -> Addr: %v\n", orderPhaseErrorFlag, sid, (*sConn).RemoteAddr())
 
 	receiveCounter := int64(0)
 
 	for {
-		var m messager.MessageBank
+		var m proto.WorkerPostReply
 
-		err := serConnDock.dec.Decode(&m)
+		err := serverConnNav.n[OrderPhase][sid].dec.Decode(&m)
 
 		counter := atomic.AddInt64(&receiveCounter, 1)
 
-		log.Debugf("server %v | len: %v | received: %+v", sid, unsafe.Sizeof(m), m)
+		//log.Debugf("server %v | len: %v | received: %+v", sid, unsafe.Sizeof(m), m)
+
+		if err == io.EOF{
+			log.Errorf("%v | server %v closed connection | err: %v", time.Now(), sid, err)
+			break
+		}
+
+		if err != nil{
+			log.Errorf("Gob Decode Err: %v | conn with ser: %v | remoteAddr: %v | Now # %v",
+				err, sid, (*sConn).RemoteAddr(), counter)
+			continue
+		}
+
+		if &m != nil {
+			go asynHandleServerPostReply(&m)
+		} else {
+			log.Errorf("received message is nil")
+		}
+	}
+}
+
+func asynHandleServerPostReply(m *proto.WorkerPostReply) {
+
+	if m == nil{
+		log.Errorf("received WorkerPostReply is empty")
+		return
+	}
+
+	clientDock := clientConnNavigator[m.GetClientId()]
+
+	if clientDock == nil {
+		log.Errorf("corresponding client has not been registered | cid: %v\n", m.GetClientId())
+		return
+	}
+
+	log.Infof("WorkerPostReply | CId: %v | MsgIndex: %v | Sig: %v\n",
+		m.GetClientId(), m.GetIndex(), hex.EncodeToString(m.GetSignature()))
+
+	clientDock.Lock()
+	txLog, ok := clientDock.m[m.GetIndex()]
+	if !ok {
+		log.Debugf("no info in cache; consensus may already reached")
+		return
+	}
+
+	orderedIndicator := txLog.Ordered
+
+	if orderedIndicator > Quorum {
+		log.Errorf("THIS SHOULD NEVER HAPPEN| logIndicator: %v | Quorum: %v", orderedIndicator, Quorum)
+		delete(clientDock.m, m.GetIndex())
+		clientDock.Unlock()
+		//continue
+		return
+	}
+
+	orderedIndicator++
+	clientDock.m[m.GetIndex()].Ordered = orderedIndicator
+	aggregatedSigShares := append(clientDock.m[m.GetIndex()].OrderingSigShares, m.GetSignature())
+	clientDock.m[m.GetIndex()].OrderingSigShares = aggregatedSigShares
+
+	clientDock.Unlock()
+
+	switch  {
+	case orderedIndicator < Quorum:
+		log.Debugf("insufficient votes for ordering | index: %v | orderedIndicator: %v", m.GetIndex(), orderedIndicator)
+		//continue
+		return
+	case orderedIndicator > Quorum:
+		log.Debugf("msg %v already broadcasted for ordering", m.GetIndex())
+		return
+	default:
+		sigThreshed, err := PenRecovery(aggregatedSigShares, txLog.OrderingInfoHash)
+		if err != nil{
+			log.Errorf("PenRecovery failed | len(sigShares): %v | error: %v", len(aggregatedSigShares), err)
+			return
+		}
+
+		//
+		// Uncomment the following part if you need this info in cache.
+		//
+		// clientDock.Lock()
+		// clientDock.m[m.GetIndex()].OrderedProofCert = sigThreshed
+		// clientDock.Unlock()
+
+		orderEntry := orderPhaseEntry(m.GetIndex(), m.GetClientId(), sigThreshed)
+
+		broadcast(orderEntry, OrderPhase)
+
+		log.Debugf("=> orderEntry broadcast for msg %v", m.GetIndex())
+	}
+
+/*	if orderedIndicator < Quorum {
+		log.Debugf("insufficient votes for ordering | index: %v | orderedIndicator: %v", m.GetIndex(), orderedIndicator)
+		//continue
+		return
+	}
+
+	//now incremented logIndicator == quorum
+	if orderedIndicator != Quorum {
+		log.Debugf("msg %v already broadcasted for ordering", m.GetIndex())
+		return
+	}*/
+
+	if RSMResponsiveness{
+		// @Gengrui Zhang
+		//
+		// Hint for developers:
+		//
+		// RSM. Responsiveness requires full phases.
+		// Post and order phases already ensure that a quorum of servers
+		// secured the unique order of the proposed transaction.
+		//
+		// Entering the commit phase, servers learn about there is a quorum
+		// of servers have committed the proposed transaction at the secured
+		// order in the ordering phase.
+		//
+		// It is possible to omit the commit phase if responsiveness can be
+		// checked out of the consensus process. E.g., running a fact checker
+		// that keeps track of server logs and conducts committing identical
+		// logs.
+		//
+		return
+	}
+
+	// Leader commits and reply to clients
+	ci := state.IncrementCommitIndex()
+
+	log.Infof("New Commit: %v | LogIndex: %v | CommitIndex: %v\n", time.Now(), txLog.Index, ci)
+
+	clientDock.Lock()
+	delete(clientDock.m, txLog.Index)
+	log.Debugf("Map size: %v | Cache of <%v, %v > was cleared", len(clientDock.m), txLog.Index, hex.EncodeToString(txLog.TxHash))
+	clientDock.Unlock()
+
+	err := notifyClient(clientDock.enc, txLog.TimeStamp[0], txLog.Index, txLog.TxHash)
+	if err != nil {
+		log.Errorf("notify client failed | err: %v", err)
+		return
+	}
+}
+
+func notifyClient(enc *gob.Encoder, ts, i int64, txHash []byte) error {
+	clientConfirmation := clientConfirmEntry(ts, i, txHash)
+
+	return enc.Encode(clientConfirmation)
+}
+
+func handleCommitPhaseServerConn(sConn *net.Conn, sid int){
+	var commitPhaseErrorFlag = errors.New("commit phase")
+
+	registerServer(sConn, CommitPhase, sid)
+
+	log.Warningf("%v | new server registered | Id: %v -> Addr: %v\n", commitPhaseErrorFlag, sid, (*sConn).RemoteAddr())
+
+	receiveCounter := int64(0)
+
+	for {
+		var m proto.WorkerOrderReply
+
+		err := serverConnNav.n[CommitPhase][sid].dec.Decode(&m)
+
+		counter := atomic.AddInt64(&receiveCounter, 1)
+
+		//log.Debugf("server %v | len: %v | received: %+v", sid, unsafe.Sizeof(m), m)
 
 		if err == io.EOF{
 			log.Errorf("%v | server %v closed connection | err: %v", time.Now(), sid, err)
@@ -185,110 +495,89 @@ func handleServerConn(sConn *net.Conn, sid int) {
 			continue
 		}
 
-		if sr := m.GetServerReplyCmd(); sr != nil {
-			go handlingServerReply(sr)
+		if &m != nil {
+			go asynHandleServerOrderReply(&m, sid)
 		} else {
 			log.Errorf("received message is nil")
 		}
-
 	}
 }
 
-func handlingServerReply(m *messager.ServerReplyCmd) {
-
-
-		clientCache := clientConnNavigator[int64(m.GetClientID())]
-
-		if clientCache == nil {
-			log.Errorf("corresponding client has not been registered | cid: %v\n", m.GetClientID())
-			return
-		}
-
-		asynchronousProcessLogReply(m, clientCache)
-}
-
-func asynchronousProcessLogReply(m *messager.ServerReplyCmd, ca *clientConnDock){
+func asynHandleServerOrderReply(m *proto.WorkerOrderReply, sid int) {
 
 	if m == nil{
+		log.Errorf("received WorkerOrderReply is empty")
 		return
 	}
 
-	log.Infof("LOG REPLY | CId: %v | Timestamp: %v | MsgIndex: %v | InfoHash: %v | Sig: %v\n",
-		m.GetClientID(), m.GetTimestamp(), m.GetMsgIndex(),
-		hex.EncodeToString(m.GetInfoHash()), hex.EncodeToString(m.GetSig()))
+	clientDock := clientConnNavigator[m.GetClientId()]
 
-	ca.Lock()
-	txLog, ok := ca.m[int64(m.GetTimestamp())]
+	if clientDock == nil {
+		log.Errorf("corresponding client has not been registered | cid: %v", m.GetClientId())
+		return
+	}
+
+	//asynchronousProcessLogReply(m, clientDock)
+
+	log.Infof("WorkerOrderReply from Server %v | CId: %v | MsgIndex: %v | Sig: %v",
+		sid, m.GetClientId(), m.GetIndex(), hex.EncodeToString(m.GetSignature()))
+
+	clientDock.Lock()
+	txLog, ok := clientDock.m[m.GetIndex()]
 	if !ok {
 		log.Debugf("no info in cache; consensus may already reached")
 		return
 	}
 
-	logIndicator := txLog.LogIndicator
+	committedIndicator := txLog.Committed
 
-	if logIndicator >= Quorum {
-		log.Debugf("THIS SHOULD NEVER HAPPEN| logIndicator: %v | Quorum: %v", logIndicator, Quorum)
-		delete(ca.m, int64(m.GetTimestamp()))
-		ca.Unlock()
+	if committedIndicator >= Quorum {
+		log.Debugf("THIS SHOULD NEVER HAPPEN| commitIndicator: %v | Quorum: %v", committedIndicator, Quorum)
+		delete(clientDock.m, m.GetIndex())
+		clientDock.Unlock()
 		//continue
 		return
 	}
 
-	logIndicator++
-	ca.m[int64(m.GetTimestamp())].LogIndicator = logIndicator
-	sigshares := append(ca.m[int64(m.GetTimestamp())].SigShares, m.GetSig())
-	ca.m[int64(m.GetTimestamp())].SigShares = sigshares
+	committedIndicator++
+	clientDock.m[m.GetIndex()].Committed = committedIndicator
+	aggregatedSigShares := append(clientDock.m[m.GetIndex()].CommitSigShares, m.GetSignature())
+	clientDock.m[m.GetIndex()].CommitSigShares = aggregatedSigShares
 
-	ca.Unlock()
+	clientDock.Unlock()
 
-	if logIndicator < Quorum {
-		log.Debugf("insufficient votes | TS: %v | logIndicator: %v", m.GetTimestamp(), logIndicator)
+	if committedIndicator < Quorum {
+		log.Debugf("insufficient votes | TS: %v | committedIndicator: %v", m.GetIndex(), committedIndicator)
 		//continue
 		return
 	}
 
 	//now incremented logIndicator == quorum
+	log.Debugf(" *** order reply votes suffice *** | TS: %v | committedIndicator: %v", m.GetIndex(), committedIndicator)
 
-	sigThreshed, err := PenRecovery(sigshares, m.GetInfoHash())
+	sigThreshed, err := PenRecovery(aggregatedSigShares, txLog.CommitInfoHash)
 	if err != nil{
-		log.Errorf("PenRecovery failed | len(sigShares): %v | error: %v", len(sigshares), err)
+		log.Errorf("PenRecovery failed | len(sigShares): %v | error: %v", len(aggregatedSigShares), err)
 		return
 	}
 
+	//
+	// Uncomment the following part if you need this info in cache.
+	//
+	// clientDock.Lock()
+	// clientDock.m[m.GetIndex()].OrderedProofCert = sigThreshed
+	// clientDock.Unlock()
+	state.IncrementCommitIndex()
 
-	txhash := txLog.TxHash
+	commitEntry := commitPhaseEntry(m.GetIndex(), m.GetClientId(), sigThreshed)
 
-	leaderIssueOrder := prepareLeaderIssueOrderMessage(txhash, m.GetInfoHash(), sigThreshed,
-		int64(m.GetMsgIndex()), int64(m.GetClientID()), int64(m.GetTimestamp()))
+	broadcast(commitEntry, CommitPhase)
+	log.Debugf("=>=> commitEntry broadcast for msg %v", m.GetIndex())
 
-	//broadcastToSConns(leaderIssueOrder)
-	//broadcastToServersMQ <- leaderIssueOrder
-
-	broadcast(leaderIssueOrder)
-
-	if ThreePhaseCommit{
-		// FUTURE WORK
-		// Three Phase Commit involves prepare, order, commit
-		// Three phase Commit is State Machine Safe
-	}
-
-	cmtIdx := atomic.AddInt64(&CommitIndex, 1)
-
-	log.Infof("NEW COMMIT | LogIndex: %v | CommitIndex: %v | ClientID: %v | Timestamp: %v\n",
-		m.GetMsgIndex(), cmtIdx, m.GetClientID(), m.GetTimestamp())
-
-	ca.Lock()
-	delete(ca.m, int64(m.GetTimestamp()))
-	log.Debugf("Map size: %v | MsgIndex: %v | TS: %v",
-		len(ca.m), m.GetMsgIndex(), m.GetTimestamp())
-	ca.Unlock()
-
-	clientConfirmation := prepareClientConfirmation(int64(m.GetTimestamp()), int64(m.GetMsgIndex()), txLog.TxHash)
-
-	err = ca.enc.Encode(clientConfirmation)
-
-	if err != nil{
-		log.Errorln(err)
+	err = notifyClient(clientDock.enc, txLog.TimeStamp[0], txLog.Index, txLog.TxHash)
+	if err != nil {
+		log.Errorf("notify client failed | err: %v", err)
 		return
 	}
+	log.Debugf("=>=> client notified for msg %v | client %v", m.GetIndex(), m.GetClientId())
 }
